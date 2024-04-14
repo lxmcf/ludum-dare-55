@@ -1,6 +1,10 @@
 #ifndef SCENES_H
 #define SCENES_H
 
+#define RAYSUITE_NO_MATH
+#define RAYSUITE_NO_GUI
+#include <raysuite.h>
+
 #define DEFINE_SCENE(name)                                                                                              \
     void Init##name (void);                                                                                             \
     void Update##name (void);                                                                                           \
@@ -12,7 +16,8 @@
 typedef enum GameSceneId {
     SCENE_UNKNOWN = -1,
     SCENE_MENU,
-    SCENE_WORLD,
+    SCENE_CAMP,
+    SCENE_DUNGEON,
 
     SCENE_COUNT,
     SCENE_NULL,
@@ -25,7 +30,8 @@ extern "C" {
 #endif
 
 DEFINE_SCENE (Menu)
-DEFINE_SCENE (World)
+DEFINE_SCENE (Camp)
+DEFINE_SCENE (Dungeon)
 
 // Implimented in scene manager
 Vector2 SceneGetViewSize (void);

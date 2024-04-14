@@ -1,52 +1,25 @@
-#include <raylib.h>
-#include <raymath.h>
+#define RAYSUITE_NO_GUI
+#include <raysuite.h>
 
 #include "../scenes.h"
+#include "../assets/sprite.h"
 
 static GameSceneId next_scene;
 
-static Vector2 position;
-
-void InitMenu (void) {
-    Vector2 size = SceneGetViewSize ();
-
-    SceneSetViewOffset (CLITERAL(Vector2){ .x = size.x / 2, .y = size.y / 2 });
-
-    position = Vector2Zero ();
-}
+void InitMenu (void) { }
 
 void UpdateMenu (void) {
-    #define SPEED 200.0f
-    int xaxis = IsKeyDown (KEY_RIGHT) - IsKeyDown (KEY_LEFT);
-    int yaxis = IsKeyDown (KEY_DOWN) - IsKeyDown (KEY_UP);
-
-    Vector2 velocity = CLITERAL(Vector2) {
-        .x = (xaxis * SPEED) * GetFrameTime (),
-        .y = (yaxis * SPEED) * GetFrameTime (),
-    };
-
-    position = Vector2Add (position, velocity);
-
-    SceneSetViewTarget (position);
+    if (IsKeyReleased (KEY_ONE)) next_scene = SCENE_CAMP;
+    if (IsKeyReleased (KEY_TWO)) next_scene = SCENE_DUNGEON;
 }
 
 void DrawMenu (void) {
-    Vector2 mouse = SceneGetMouse ();
-
-    DrawCircle (0, 0, 32, RED);
-
-    // DrawText ("[ MENU ]", (int)mouse.x, (int)mouse.y, 20, WHITE);
-
-    DrawCircleV (mouse, 8.0f, GREEN);
+    DrawText ("1: Camp Scene\n\n2: Dungeon Scene",8, 8, 20, WHITE);
 }
 
-void DrawMenuGui (void) {
-    DrawCircleV (Vector2Zero (), 8.0f, BLUE);
-}
+void DrawMenuGui (void) { }
 
-void UnloadMenu (void) {
-
-}
+void UnloadMenu (void) { }
 
 GameSceneId FinishMenu (void) {
     return next_scene;

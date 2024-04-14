@@ -1,7 +1,9 @@
-#include <raylib.h>
-#include <raymath.h>
+#define RAYSUITE_NO_GUI
+#include <raysuite.h>
 
 #include "scene_manager.h"
+
+#define DEFAULT_BACKGROUND CLITERAL(Colour){ 71, 45, 60, 255 }
 
 #define REGISTER_SCENE(name,id)                                                                                         \
     __RegisterScene (id,Init##name,Update##name,Draw##name,Draw##name##Gui,Unload##name,Finish##name);                  \
@@ -21,7 +23,8 @@ static Camera2D projection_camera;
 static Rectangle world_rectangle;
 static Rectangle projection_rectangle;
 
-static RenderTexture2D target_texture;
+static RenderTexture2D world_target_texture;
+static RenderTexture2D gui_target_texture;
 
 static float projection_ratio;
 static Vector2 camera_target;
@@ -53,7 +56,8 @@ static void __InitCameras (int view_width, int view_height) {
 
     projection_ratio = window_width / view_width;
 
-    target_texture = LoadRenderTexture (view_width, view_height);
+    world_target_texture = LoadRenderTexture (view_width, view_height);
+    gui_target_texture = LoadRenderTexture (view_width, view_height);
     camera_target = Vector2Zero ();
     camera_offset = Vector2Zero ();
 
@@ -78,7 +82,8 @@ static void __UpdateCameras (void) {
 
 void SceneManagerInit (int view_width, int view_height) {
     REGISTER_SCENE (Menu, SCENE_MENU);
-    REGISTER_SCENE (World, SCENE_WORLD);
+    REGISTER_SCENE (Camp, SCENE_CAMP);
+    REGISTER_SCENE (Dungeon, SCENE_DUNGEON);
 
     __InitCameras (view_width, view_height);
 
@@ -90,12 +95,16 @@ void SceneManagerUpdate (void) {
 
     __UpdateCameras ();
 
-    BeginTextureMode (target_texture);
-        ClearBackground (SKYBLUE);
+    BeginTextureMode (world_target_texture);
+        ClearBackground (DEFAULT_BACKGROUND);
 
         BeginMode2D (world_camera);
             scene_list[current_scene].draw ();
         EndMode2D ();
+    EndTextureMode ();
+
+    BeginTextureMode (gui_target_texture);
+        ClearBackground (Fade (DEFAULT_BACKGROUND, 0.0f));
 
         scene_list[current_scene].draw_gui ();
     EndTextureMode ();
@@ -104,9 +113,10 @@ void SceneManagerUpdate (void) {
         ClearBackground (RED);
 
         BeginMode2D (projection_camera);
-            DrawTexturePro (target_texture.texture, world_rectangle, projection_rectangle, Vector2Zero (), 0.0f, WHITE);
+            DrawTexturePro (world_target_texture.texture, world_rectangle, projection_rectangle, Vector2Zero (), 0.0f, WHITE);
         EndMode2D ();
 
+        DrawTexturePro (gui_target_texture.texture, world_rectangle, projection_rectangle, Vector2Zero (), 0.0f, WHITE);
 
         #ifdef BUILD_DEBUG
         #define MINIMUM_FPS 30
@@ -137,7 +147,8 @@ void SceneManagerUpdate (void) {
 void SceneManagerUnload (void) {
     scene_list[current_scene].unload ();
 
-    UnloadRenderTexture (target_texture);
+    UnloadRenderTexture (world_target_texture);
+    UnloadRenderTexture (gui_target_texture);
 }
 
 // -----------------------------------------------------------------------------
@@ -145,8 +156,8 @@ void SceneManagerUnload (void) {
 // -----------------------------------------------------------------------------
 Vector2 SceneGetViewSize (void) {
     return CLITERAL(Vector2) {
-        .x = target_texture.texture.width,
-        .y = target_texture.texture.height,
+        .x = world_target_texture.texture.width,
+        .y = world_target_texture.texture.height,
     };
 }
 

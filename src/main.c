@@ -1,10 +1,13 @@
-#include <raylib.h>
+#define RAYSUITE_NO_MATH
+#define RAYSUITE_NO_GUI
+#include <raysuite.h>
 
 #ifdef PLATFORM_WEB
 #include <emscripten/emscripten.h>
 #endif
 
 #include "core/scene_manager.h"
+#include "assets/asset_manager.h"
 
 #define WINDOW_DEFAULT_SIZE (Vector2){ .x = 1280, .y = 720 }
 #define WINDOW_TITLE "Ludum Dare 55 | Summoning"
@@ -28,6 +31,7 @@ int main (int argc, const char* argv[]) {
     #endif
 
     SceneManagerUnload ();
+    UnloadAssetManager ();
 
     CloseWindow ();
 
