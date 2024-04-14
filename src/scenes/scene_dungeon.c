@@ -8,6 +8,9 @@
 typedef struct Player {
     Vector2 position;
 
+    int max_cards;
+    int current_card;
+
     int life;
     int max_life;
 } Player;
@@ -17,7 +20,6 @@ static GameSceneId next_scene;
 #define DUNGEON_TILE_SIZE 16
 #define DUNGEON_TILES_WIDTH 16
 #define DUNGEON_TILES_HEIGHT 8
-#define DUNGEON_TILES_COUNT DUNGEON_TILES_WIDTH * DUNGEON_TILES_HEIGHT
 
 static Rectangle __dungeon_bounds;
 static Player player;
@@ -47,7 +49,10 @@ void InitDungeon (void) {
     player = CLITERAL(Player) {
         .position = Vector2Zero (),
         .life = 3,
-        .max_life = 3,
+        .max_life = 6,
+
+        .max_cards = 4,
+        .current_card = 0,
     };
 
     __ResetPlayerPosition ();
@@ -85,6 +90,15 @@ void UpdateDungeon (void) {
         #undef PADDING_X
         #undef PADDING_Y
     }
+
+    {   // Card Selection
+        int xaxis = IsKeyPressed (KEY_RIGHT) - IsKeyPressed (KEY_LEFT);
+
+        player.current_card += xaxis;
+
+        if (player.current_card < 0) player.current_card = player.max_cards - 1;
+        if (player.current_card > player.max_cards - 1) player.current_card = 0;
+    }
 }
 
 void DrawDungeon (void) {
@@ -105,12 +119,12 @@ void DrawDungeon (void) {
 void DrawDungeonGui (void) {
     Vector2 scene_view = SceneGetViewSize ();
 
-    #define HEART_PADDING 2
+    #define UI_PADDING 2
 
     for (int i = 0; i < player.max_life; i++) {
         Vector2 position = CLITERAL(Vector2) {
-            .x = HEART_PADDING + i * (16 + HEART_PADDING),
-            .y = HEART_PADDING
+            .x = UI_PADDING + i * (16 + UI_PADDING),
+            .y = UI_PADDING
         };
 
         if (i > player.life - 1) {
@@ -121,22 +135,22 @@ void DrawDungeonGui (void) {
         DrawSprite ("assets/heart.png", position);
     }
 
-    #define CARD_OFFSET 2
     Rectangle card_bounds = SpriteGetBounds ("assets/card.png");
+    for (int i = 0; i < player.max_cards; i++) {
+        int offset = 16;
 
-    for (int i = 0; i < 4; i++) {
+        if (player.current_card == i) offset = 32;
+
         Vector2 position = CLITERAL(Vector2) {
-            .x = 8 + i * (card_bounds.width + (CARD_OFFSET * 2)),
-            .y = scene_view.y - 16,
+            .x = 8 + i * (card_bounds.width + (UI_PADDING * 2)),
+            .y = scene_view.y - offset,
         };
 
         DrawSprite ("assets/card.png", position);
     }
 }
 
-void UnloadDungeon (void) {
-
-}
+void UnloadDungeon (void) { }
 
 GameSceneId FinishDungeon (void) {
     return next_scene;
