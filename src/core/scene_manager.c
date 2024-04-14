@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <raymath.h>
 
 #include "scene_manager.h"
 
@@ -53,15 +54,15 @@ static void __InitCameras (int view_width, int view_height) {
     projection_ratio = window_width / view_width;
 
     target_texture = LoadRenderTexture (view_width, view_height);
-    camera_target = CLITERAL(Vector2){ .x = 0.0f, .y = 0.0f };
-    camera_offset = CLITERAL(Vector2){ .x = 0.0f, .y = 0.0f };
+    camera_target = Vector2Zero ();
+    camera_offset = Vector2Zero ();
 
     world_rectangle = CLITERAL(Rectangle){ .x = 0.0f, .y = 0.0f, .width = (float)view_width, .height = -(float)view_height };
     projection_rectangle = CLITERAL(Rectangle){ .x = -projection_ratio, .y = -projection_ratio, .width = window_width + (projection_ratio * 2), .height = window_height + (projection_ratio * 2) };
 }
 
 static void __UpdateCameras (void) {
-    projection_camera.target = CLITERAL(Vector2){
+    projection_camera.target = CLITERAL(Vector2) {
         .x = camera_target.x - camera_offset.x,
         .y = camera_target.y - camera_offset.y,
     };
@@ -82,7 +83,6 @@ void SceneManagerInit (int view_width, int view_height) {
     __InitCameras (view_width, view_height);
 
     scene_list[0].init ();
-
 }
 
 void SceneManagerUpdate (void) {
@@ -101,10 +101,10 @@ void SceneManagerUpdate (void) {
     EndTextureMode ();
 
     BeginDrawing ();
-        ClearBackground (PURPLE);
+        ClearBackground (RED);
 
         BeginMode2D (projection_camera);
-            DrawTexturePro (target_texture.texture, world_rectangle, projection_rectangle, CLITERAL(Vector2){ .x = 0.0f, .y = 0.0 }, 0.0f, WHITE);
+            DrawTexturePro (target_texture.texture, world_rectangle, projection_rectangle, Vector2Zero (), 0.0f, WHITE);
         EndMode2D ();
 
 

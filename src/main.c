@@ -45,7 +45,11 @@ void SetMaxFramerate (void) {
     int fps = GetMonitorRefreshRate (current_monitor);
 
     // Fallback to 60 FPS target if error occurs
-    if (fps <= 0) fps = DEFAULT_TARGET_FPS;
+    if (fps <= 0) {
+        TraceLog (LOG_ERROR, "Could not detect monitor refresh rate!");
+
+        fps = DEFAULT_TARGET_FPS;
+    }
 
     SetTargetFPS (fps);
 }
