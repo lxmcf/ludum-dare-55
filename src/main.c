@@ -10,7 +10,7 @@
 #include "assets/asset_manager.h"
 
 #define WINDOW_DEFAULT_SIZE (Vector2){ .x = 1280, .y = 720 }
-#define WINDOW_TITLE "Ludum Dare 55 | Summoning"
+#define WINDOW_TITLE "Ludum Dare 55 | Summoner's Deck"
 
 static void UpdateDrawFrame (void);
 
@@ -34,7 +34,7 @@ int main (int argc, const char* argv[]) {
         fps = DEFAULT_TARGET_FPS;
     }
 
-    SetTargetFPS (fps);
+    // SetTargetFPS (fps);
 
     while (!WindowShouldClose ()) {
         UpdateDrawFrame ();

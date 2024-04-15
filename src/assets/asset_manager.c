@@ -1,8 +1,10 @@
 #define RAYSUITE_NO_GUI
 #include <raysuite.h>
 
-#define MAX_ASSET_CACHE_SIZE 256
+// Was getting wayyyy too many collisions on 256, really need to use lists for collisions
+#define MAX_ASSET_CACHE_SIZE 512
 #include "sprite.h"
+#include "font.h"
 
 // Adapted from: http://www.cse.yorku.ca/~oz/hash.html
 static size_t __hash (const char* string) {
@@ -21,7 +23,7 @@ static size_t __hash (const char* string) {
 // -----------------------------------------------------------------------------
 static Sprite __sprites[MAX_ASSET_CACHE_SIZE];
 
-void LoadSprite (const char* filename, Vector2 origin, Colour colour) {
+void CacheSprite (const char* filename, Vector2 origin, Colour colour) {
     size_t index = __hash (filename);
 
     // Shoudl probably check for string collisions here but C and strings...
@@ -50,7 +52,7 @@ void DrawSprite (const char* filename, Vector2 position) {
     size_t index = __hash (filename);
     Sprite sprite = __sprites[index];
 
-    if (!sprite.loaded) LoadSprite (filename, SPRITE_DEFAULT_ORIGIN, SPRITE_DEFAULT_COLOUR);
+    if (!sprite.loaded) CacheSprite (filename, SPRITE_DEFAULT_ORIGIN, SPRITE_DEFAULT_COLOUR);
 
     Rectangle destination_rectangle = CLITERAL(Rectangle) {
         .x = position.x,
@@ -67,7 +69,7 @@ void DrawSpriteNineSlice (const char* filename, Rectangle bounds) {
     size_t index = __hash (filename);
     Sprite sprite = __sprites[index];
 
-    if (!sprite.loaded) LoadSprite (filename, SPRITE_DEFAULT_ORIGIN, SPRITE_DEFAULT_COLOUR);
+    if (!sprite.loaded) CacheSprite (filename, SPRITE_DEFAULT_ORIGIN, SPRITE_DEFAULT_COLOUR);
 
     int slice_xaxis = sprite.bounds.width / 3;
     int slice_yaxis = sprite.bounds.height / 3;
@@ -99,9 +101,33 @@ void SpriteSetColour (const char* filename, Colour colour) {
 Rectangle SpriteGetBounds (const char* filename) {
     size_t index = __hash (filename);
 
-    if (!__sprites[index].loaded) LoadSprite (filename, SPRITE_DEFAULT_ORIGIN, SPRITE_DEFAULT_COLOUR);
+    if (!__sprites[index].loaded) CacheSprite (filename, SPRITE_DEFAULT_ORIGIN, SPRITE_DEFAULT_COLOUR);
 
     return __sprites[index].bounds;
+}
+
+
+// -----------------------------------------------------------------------------
+// FONT FUNCTIONS
+// -----------------------------------------------------------------------------
+static Font __fonts[MAX_ASSET_CACHE_SIZE];
+
+void FontDrawText (const char* filename, const char* text, Vector2 position, Colour colour, float size) {
+    size_t index = __hash (filename);
+
+    if (!IsFontReady (__fonts[index])) __fonts[index] = LoadFont (filename);
+
+    DrawTextEx (__fonts[index], text, position, size, DEFAULT_FONT_SPACING, colour);
+}
+
+void FontDrawTextCentered (const char* filename, const char* text, Vector2 position, Colour colour, float size) {
+    size_t index = __hash (filename);
+
+    if (!IsFontReady (__fonts[index])) __fonts[index] = LoadFont (filename);
+
+    Vector2 text_size = Vector2Multiply (MeasureTextEx (__fonts[index], text, size, DEFAULT_FONT_SPACING), CLITERAL(Vector2){ 0.5f, 0.5f });
+
+    DrawTextEx (__fonts[index], text, Vector2Subtract (position, text_size), size, DEFAULT_FONT_SPACING, colour);
 }
 
 // -----------------------------------------------------------------------------
@@ -113,6 +139,11 @@ void UnloadAssetManager (void) {
         if (__sprites[i].loaded) {
             UnloadTexture (__sprites[i].texture);
             __sprites[i].loaded = false;
+        }
+
+        // FONTS
+        if (IsFontReady (__fonts[i])) {
+            UnloadFont (__fonts[i]);
         }
     }
 }

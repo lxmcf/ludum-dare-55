@@ -25,7 +25,7 @@ typedef struct Sprite {
 extern "C" {
 #endif
 
-void LoadSprite (const char* filename, Vector2 origin, Colour colour);
+void CacheSprite (const char* filename, Vector2 origin, Colour colour);
 void DrawSprite (const char* filename, Vector2 position);
 void DrawSpriteNineSlice (const char* filename, Rectangle bounds);
 
