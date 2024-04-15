@@ -13,7 +13,6 @@
 #define WINDOW_TITLE "Ludum Dare 55 | Summoning"
 
 static void UpdateDrawFrame (void);
-static void SetMaxFramerate (void);
 
 int main (int argc, const char* argv[]) {
     InitWindow (WINDOW_DEFAULT_SIZE.x, WINDOW_DEFAULT_SIZE.y, WINDOW_TITLE);
@@ -23,7 +22,19 @@ int main (int argc, const char* argv[]) {
     #ifdef PLATFORM_WEB
     emscripten_set_main_loop (UpdateDrawFrame, 0, 1);
     #else
-    SetMaxFramerate ();
+    #define DEFAULT_TARGET_FPS 60
+
+    int current_monitor = GetCurrentMonitor ();
+    int fps = GetMonitorRefreshRate (current_monitor);
+
+    // Fallback to 60 FPS target if error occurs
+    if (fps <= 0) {
+        TraceLog (LOG_ERROR, "Could not detect monitor refresh rate!");
+
+        fps = DEFAULT_TARGET_FPS;
+    }
+
+    SetTargetFPS (fps);
 
     while (!WindowShouldClose ()) {
         UpdateDrawFrame ();
@@ -42,18 +53,3 @@ void UpdateDrawFrame (void) {
     SceneManagerUpdate ();
 }
 
-void SetMaxFramerate (void) {
-    #define DEFAULT_TARGET_FPS 60
-
-    int current_monitor = GetCurrentMonitor ();
-    int fps = GetMonitorRefreshRate (current_monitor);
-
-    // Fallback to 60 FPS target if error occurs
-    if (fps <= 0) {
-        TraceLog (LOG_ERROR, "Could not detect monitor refresh rate!");
-
-        fps = DEFAULT_TARGET_FPS;
-    }
-
-    SetTargetFPS (fps);
-}

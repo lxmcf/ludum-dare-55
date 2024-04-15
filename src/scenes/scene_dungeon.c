@@ -15,6 +15,31 @@ typedef struct Player {
     int max_life;
 } Player;
 
+#define MAX_ENEMIES 8
+typedef enum EnemyType {
+    SLIME,
+    GHOST_1,
+    GHOST_2,
+    GOBLIN,
+    ORC,
+
+    ENEMY_TYPE_COUNT
+} EnemyType;
+
+typedef struct Enemy {
+    Vector2 position;
+    EnemyType type;
+
+    bool is_active;
+    bool is_defeated;
+    bool is_ghost;
+
+    int life;
+    int max_life;
+} Enemy;
+
+static Enemy __dungeon_enemies[MAX_ENEMIES];
+
 static GameSceneId next_scene;
 
 #define DUNGEON_TILE_SIZE 16
@@ -42,6 +67,8 @@ void InitDungeon (void) {
 
     // Ensure texture's have correct data that need it
     LoadSprite ("assets/player.png", CLITERAL(Vector2){ 8, 16 }, WHITE);
+    LoadSprite ("assets/ghost_1.png", CLITERAL(Vector2){ 8, 16 }, WHITE);
+
     LoadSprite ("assets/dungeon_door_closed.png", CLITERAL(Vector2){ 8, 16 }, WHITE);
     LoadSprite ("assets/dungeon_door_open.png", CLITERAL(Vector2){ 8, 16 }, WHITE);
     LoadSprite ("assets/pointer_arrow.png", CLITERAL(Vector2){ 8, 0 }, WHITE);
@@ -56,6 +83,8 @@ void InitDungeon (void) {
     };
 
     __ResetPlayerPosition ();
+
+    __dungeon_enemies[0].is_active = true;
 }
 
 void UpdateDungeon (void) {
@@ -67,6 +96,18 @@ void UpdateDungeon (void) {
 
     {   // MISC
 
+    }
+
+    {   // Update Enemies
+        for (int i = 0; i < MAX_ENEMIES; i++) {
+            if (__dungeon_enemies[i].is_active) continue;
+            if (__dungeon_enemies[i].is_defeated) continue;
+
+            #define ATTACK_DISTANCE 16.0f
+            if (Vector2Distance (__dungeon_enemies[i].position, player.position) > ATTACK_DISTANCE) {
+                __dungeon_enemies[i].position = Vector2MoveTowards (__dungeon_enemies[i].position, player.position, (PLAYER_SPEED * 0.5f) * GetFrameTime ());
+            }
+        }
     }
 
     {   // Update Player
@@ -111,6 +152,12 @@ void DrawDungeon (void) {
         DrawSprite ("assets/pointer_arrow.png", CLITERAL(Vector2){ __dungeon_bounds.width / 2, SINE (GetTime () * 8) * 4 });
     } else {
         DrawSprite ("assets/dungeon_door_closed.png", CLITERAL(Vector2){ __dungeon_bounds.width / 2 , 0 });
+    }
+
+    for (int i = 0; i < MAX_ENEMIES; i++) {
+        if (__dungeon_enemies[i].is_active) continue;
+
+        DrawSprite ("assets/ghost_1.png", __dungeon_enemies[i].position);
     }
 
     DrawSprite ("assets/player.png", player.position);
