@@ -19,11 +19,28 @@ typedef enum CardType {
     CARD_TYPE_NONE
 } CardType;
 
+#define FIREBALL_VALUE 3
+#define FIREBALL_ICON "assets/card/fireball.png"
+
+#define BLIZZARD_VALUE 2
+#define BLIZZARD_ICON "assets/card/blizzard.png"
+
+#define BOLT_VALUE 3
+#define BOLT_ICON "assets/card/bolt.png"
+
+#define FREEZE_VALUE 2
+#define FREEZE_ICON "assets/card/freeze.png"
+
+#define HEAL_VALUE 1
+#define HEAL_ICON "assets/card/mini_heart.png"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 const char* CardGetName (CardType type);
+void DrawCard (CardType type, Vector2 position);
+void PlayCard (CardType type);
 
 #ifdef __cplusplus
 }
@@ -228,12 +245,23 @@ void InitDungeon (void) {
     SceneSetViewTarget (CLITERAL(Vector2){ __dungeon_bounds.width / 2, __dungeon_bounds.height / 2 });
 
     // Ensure texture's have correct data that need it, super scuffed
+    // PLAYER
     CacheSprite ("assets/player.png", CLITERAL(Vector2){ 8, 16 }, WHITE);
     CacheSprite ("assets/target.png", CLITERAL(Vector2){ 8, 16 }, WHITE);
 
+    // CARD ICONS
+    CacheSprite ("assets/card/mini_heart.png", CLITERAL(Vector2){ 8, 8}, WHITE);
+    CacheSprite (FIREBALL_ICON, CLITERAL(Vector2){ 8, 8}, WHITE);
+    CacheSprite (BLIZZARD_ICON, CLITERAL(Vector2){ 8, 8}, WHITE);
+    CacheSprite (BOLT_ICON, CLITERAL(Vector2){ 8, 8}, WHITE);
+    CacheSprite (HEAL_ICON, CLITERAL(Vector2){ 8, 8}, WHITE);
+    CacheSprite (FREEZE_ICON, CLITERAL(Vector2){ 8, 8}, WHITE);
+
+    // MISC
     CacheSprite ("assets/trap.png", CLITERAL(Vector2){ 8, 8 }, WHITE);
     CacheSprite ("assets/bones.png", CLITERAL(Vector2){ 8, 8 }, WHITE);
 
+    // ENEMIES
     CacheSprite ("assets/enemies/slime.png", CLITERAL(Vector2){ 8, 16 }, WHITE);
     CacheSprite ("assets/enemies/ghost_1.png", CLITERAL(Vector2){ 8, 16 }, WHITE);
     CacheSprite ("assets/enemies/ghost_2.png", CLITERAL(Vector2){ 8, 16 }, WHITE);
@@ -241,6 +269,7 @@ void InitDungeon (void) {
     CacheSprite ("assets/enemies/imp.png", CLITERAL(Vector2){ 8, 16 }, WHITE);
     CacheSprite ("assets/enemies/goblin.png", CLITERAL(Vector2){ 8, 16 }, WHITE);
 
+    // DUNGEON ASSETS
     CacheSprite ("assets/dungeon/door_closed.png", CLITERAL(Vector2){ 8, 16 }, WHITE);
     CacheSprite ("assets/dungeon/door_open.png", CLITERAL(Vector2){ 8, 16 }, WHITE);
     CacheSprite ("assets/dungeon/pointer_arrow.png", CLITERAL(Vector2){ 8, 0 }, WHITE);
@@ -396,7 +425,7 @@ void UpdateDungeon (void) {
 
             if (dungeon_state.enemy_count > 0) {
                 if (activate && player.current_hand[player.current_card] != CARD_TYPE_NONE) {
-                    __dungeon_enemies[player.closest_enemy_id].life -= 1;
+                    PlayCard (player.current_hand[player.current_card]);
 
                     player.current_hand[player.current_card] = CARD_TYPE_NONE;
                 }
@@ -462,7 +491,7 @@ void DrawDungeonGui (void) {
         DrawSprite ("assets/heart.png", position);
     }
 
-    Rectangle card_bounds = SpriteGetBounds ("assets/card.png");
+    Rectangle card_bounds = SpriteGetBounds ("assets/card/card.png");
     for (int i = 0; i < PLAYER_HAND_SIZE; i++) {
         int offset = 16;
 
@@ -478,9 +507,7 @@ void DrawDungeonGui (void) {
             .y = scene_view.y - offset,
         };
 
-        DrawSprite ("assets/card.png", position);
-
-        FontDrawTextCentered ("assets/font/four_pixels_font.ttf", CardGetName (player.current_hand[i]), CLITERAL(Vector2){ position.x + (card_bounds.width / 2), position.y + 8 }, WHITE, 4);
+        DrawCard (player.current_hand[i], position);
     }
 }
 
@@ -500,6 +527,81 @@ const char* CardGetName (CardType type) {
 
         default:
             return "...";
+    }
+}
+
+void DrawCard (CardType type, Vector2 position) {
+    DrawSprite ("assets/card/card.png", position);
+
+    Rectangle bounds = SpriteGetBounds ("assets/card/card.png");
+
+    // Yes I am doing this twice
+    Vector2 card_offset = CLITERAL(Vector2) { bounds.width / 2, 8 };
+
+    FontDrawTextCentered ("assets/font/four_pixels_font.ttf", CardGetName (type), Vector2Add (position, card_offset), WHITE, 4);
+
+    card_offset.y = 22;
+
+    switch (type) {
+        case FIREBALL:
+            card_offset.x = (bounds.width / 2) - 8;
+            DrawSprite (FIREBALL_ICON, Vector2Add (position, card_offset));
+
+            card_offset.x = (bounds.width / 2) + 8;
+            FontDrawTextCentered ("assets/font/four_pixels_font.ttf", TextFormat ("%d", FIREBALL_VALUE), Vector2Add (position, card_offset), WHITE, 8);
+            break;
+
+        case BLIZZARD:
+            card_offset.x = (bounds.width / 2) - 8;
+            DrawSprite (BLIZZARD_ICON, Vector2Add (position, card_offset));
+
+            card_offset.x = (bounds.width / 2) + 8;
+            FontDrawTextCentered ("assets/font/four_pixels_font.ttf", TextFormat ("%d", BLIZZARD_VALUE), Vector2Add (position, card_offset), WHITE, 8);
+            break;
+
+        case BOLT:
+            card_offset.x = (bounds.width / 2) - 8;
+            DrawSprite (BOLT_ICON, Vector2Add (position, card_offset));
+
+            card_offset.x = (bounds.width / 2) + 8;
+            FontDrawTextCentered ("assets/font/four_pixels_font.ttf", TextFormat ("%d", BOLT_VALUE), Vector2Add (position, card_offset), WHITE, 8);
+            break;
+
+        case HEAL:
+            DrawSprite (HEAL_ICON, Vector2Add (position, card_offset));
+            break;
+
+        case FREEZE:
+            DrawSprite (FREEZE_ICON, Vector2Add (position, card_offset));
+            break;
+
+        default: break;
+    }
+}
+
+void PlayCard (CardType type) {
+    switch (type) {
+        case FIREBALL:
+            __dungeon_enemies[player.closest_enemy_id].life -= FIREBALL_VALUE;
+            break;
+
+        case BLIZZARD:
+            __dungeon_enemies[player.closest_enemy_id].life -= BLIZZARD_VALUE;
+            break;
+
+        case BOLT:
+            __dungeon_enemies[player.closest_enemy_id].life -= BOLT_VALUE;
+            break;
+
+        case HEAL:
+            if (player.life < player.max_life) player.life += HEAL_VALUE;
+            break;
+
+        case FREEZE:
+            // __dungeon_enemies[player.closest_enemy_id].life -= BLIZZARD_VALUE;
+            break;
+
+        default: break;
     }
 }
 

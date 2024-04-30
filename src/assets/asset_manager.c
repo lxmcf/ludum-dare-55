@@ -2,7 +2,7 @@
 #include <raysuite.h>
 
 // Was getting wayyyy too many collisions on 256, really need to use lists for collisions
-#define MAX_ASSET_CACHE_SIZE 512
+#define MAX_ASSET_CACHE_SIZE 1024
 #include "sprite.h"
 #include "font.h"
 
